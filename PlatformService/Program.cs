@@ -1,6 +1,6 @@
-
 using Microsoft.EntityFrameworkCore;
 using PlatformService.Data;
+using PlatformService.Mapping;
 
 namespace PlatformService
 {
@@ -16,6 +16,10 @@ namespace PlatformService
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<MyDbContext>(options => options.UseInMemoryDatabase("InMem"));
+            builder.Services.ConfigureUnitOfWork();
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.ConfigurePlatformService();
+            builder.Services.AddHttpContextAccessor();
 
             var app = builder.Build();
 
@@ -31,6 +35,7 @@ namespace PlatformService
 
 
             app.MapControllers();
+            app.PrepPopulation();
 
             app.Run();
         }
