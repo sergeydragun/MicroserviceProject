@@ -1,5 +1,5 @@
 ﻿using PlatformService.Data.Intrefaces;
-using PlatformService.Models;
+using PlatformService.Entities;
 
 namespace PlatformService.Data.Repositories
 {

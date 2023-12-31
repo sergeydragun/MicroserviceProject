@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using PlatformService.BLL.AsyncDataServices.Interfaces;
 using PlatformService.BLL.DTO;
 using PlatformService.BLL.Interfaces;
-using PlatformService.Models;
+using PlatformService.Entities;
+using PlatformService.SyncDataServices.Http.Interfaces;
 
 namespace PlatformService.Controllers
 {
@@ -11,10 +13,16 @@ namespace PlatformService.Controllers
     public class PlatformsController : BaseController
     {
         protected readonly IPlatformService _platformService;
+        private readonly ICommandDataClient _commandDataClient;
+        private readonly IMessageBusClient _messageBusClient;
+
         public PlatformsController(ILogger<BaseController> logger, IMapper mapper, IHttpContextAccessor contextAccessor,
-                                    IPlatformService platformService) : base(logger, mapper, contextAccessor)
+                                    IPlatformService platformService, ICommandDataClient commandDataClient, 
+                                    IMessageBusClient messageBusClient) : base(logger, mapper, contextAccessor)
         {
             _platformService = platformService;
+            _commandDataClient = commandDataClient;
+            _messageBusClient = messageBusClient;
         }
 
         [HttpGet]
@@ -46,14 +54,34 @@ namespace PlatformService.Controllers
             {
                 var platformReadDTO = _mapper.Map<PlatformReadDTO>(platform);
                 var route = CreatedAtRoute(nameof(GetPlatformById), new { id = platformReadDTO.Id }, platformReadDTO);
-                return route;
+
+                try
+                {
+                    await _commandDataClient.SendPlatformToCommand(platformReadDTO);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Could not send synchronously {ex.Message}");
+                }
+
+                try
+                {
+                    var platformPublishedDTO = _mapper.Map<PlatformPublishedDTO>(platformReadDTO);
+                    platformPublishedDTO.Event = "Platform_Published";
+                    _messageBusClient.PublishNewPlatform(platformPublishedDTO);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Could not send asynchronously {ex.Message}");
+                }
+
+                return route;    
             }
 
             return BadRequest();
         }
 
-        [Route("DeletePlatform/{id}")]
-        [HttpDelete]
+        [HttpDelete("{id}", Name = "DeletePlatform")]
         public async Task<IActionResult> DeletePlatform(int id)
         {
             bool res = await _platformService.DeletePlatformAsync(id);

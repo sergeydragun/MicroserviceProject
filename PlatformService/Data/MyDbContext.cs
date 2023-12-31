@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PlatformService.Models;
+using PlatformService.Entities;
 
 namespace PlatformService.Data
 {
@@ -11,5 +11,10 @@ namespace PlatformService.Data
         }
 
         public DbSet<Platform> Platforms { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

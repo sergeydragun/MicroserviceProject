@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PlatformService.BLL.SyncDataServices.Grpc;
 using PlatformService.Data;
 using PlatformService.Mapping;
 
@@ -15,13 +16,18 @@ namespace PlatformService
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<MyDbContext>(options => options.UseInMemoryDatabase("InMem"));
+            builder.Services.ConfigureDbContext(builder.Environment, builder.Configuration);
             builder.Services.ConfigureUnitOfWork();
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.ConfigurePlatformService();
             builder.Services.AddHttpContextAccessor();
-
+            builder.Services.AddHttpCommandDataClient();
+            builder.Services.ConfigureMessageBusClient();
+            builder.Services.AddGrpc();
             var app = builder.Build();
+
+            Console.WriteLine(app.Configuration["CommandService"]);
+            Console.WriteLine("testing");
 
             if (app.Environment.IsDevelopment())
             {
@@ -29,13 +35,17 @@ namespace PlatformService
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseAuthorization();
 
-
             app.MapControllers();
-            app.PrepPopulation();
+            app.MapGrpcService<GrpcPlatformService>();
+
+            app.MapGet("/protos/platforms.proto", async context =>
+            {
+                await context.Response.WriteAsync(System.IO.File.ReadAllText("Protos/platforms.proto"));
+            });
+
+            app.PrepPopulation(app.Environment);
 
             app.Run();
         }

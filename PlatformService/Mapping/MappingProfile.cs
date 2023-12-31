@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using PlatformService.BLL.DTO;
-using PlatformService.Models;
+using PlatformService.Entities;
 
 namespace PlatformService.Mapping
 {
@@ -9,8 +9,12 @@ namespace PlatformService.Mapping
         public MappingProfile() 
         {
             CreateMap<Platform, PlatformReadDTO>();
-
             CreateMap<PlatformCreateDTO, Platform>();
+
+            CreateMap<PlatformReadDTO, PlatformPublishedDTO>();
+
+            CreateMap<Platform, GrpcPlatformModel>()
+                .ForMember(dest => dest.PlatformId, d => d.MapFrom(src => src.Id));
         }
 
     }

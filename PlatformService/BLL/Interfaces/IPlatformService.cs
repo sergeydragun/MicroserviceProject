@@ -1,5 +1,5 @@
 ﻿using PlatformService.BLL.DTO;
-using PlatformService.Models;
+using PlatformService.Entities;
 
 namespace PlatformService.BLL.Interfaces
 {

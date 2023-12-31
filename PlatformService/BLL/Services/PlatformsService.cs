@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PlatformService.BLL.DTO;
 using PlatformService.BLL.Interfaces;
 using PlatformService.Data.Intrefaces;
-using PlatformService.Models;
+using PlatformService.Entities;
 
 namespace PlatformService.BLL.Services
 {
